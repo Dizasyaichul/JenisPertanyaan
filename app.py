@@ -12,86 +12,64 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from pathlib import Path
 import os
+from PIL import Image
 
 # Initialize NLTK data directory
 nltk_data_dir = Path("./nltk_data")
 nltk_data_dir.mkdir(exist_ok=True)
-
-# Add the nltk_data directory to NLTK's search path
 nltk.data.path.insert(0, str(nltk_data_dir))
 
 @st.cache_resource
 def initialize_nltk():
-    """Initialize all required NLTK resources"""
+    """Initialize required NLTK resources"""
     resources = ['stopwords', 'wordnet']
     for resource in resources:
         try:
-            if resource == 'stopwords':
-                nltk.data.find('corpora/stopwords')
-            elif resource == 'wordnet':
-                nltk.data.find('corpora/wordnet')
+            nltk.data.find(f'corpora/{resource}')
         except LookupError:
-            print(f"Downloading {resource}...")
             nltk.download(resource, download_dir=str(nltk_data_dir), quiet=True)
 
 # Initialize NLTK resources
 initialize_nltk()
 
-# Initialize stopwords
+# Load stopwords and lemmatizer
 try:
     stop_words = set(stopwords.words('english'))
 except LookupError:
     nltk.download('stopwords', download_dir=str(nltk_data_dir), quiet=True)
     stop_words = set(stopwords.words('english'))
 
-# Initialize lemmatizer
 lemmatizer = WordNetLemmatizer()
 
-# Load model and related files
 @st.cache_resource
 def load_model_files():
+    """Load model and necessary files"""
     try:
         model = keras.models.load_model('sentimen_model.h5')
-        
         with open('tokenizer.pkl', 'rb') as handle:
             tokenizer = pickle.load(handle)
-            
         with open('label_encoder.pkl', 'rb') as handle:
             label_encoder = pickle.load(handle)
-            
         with open('maxlen.pkl', 'rb') as handle:
             maxlen = pickle.load(handle)
-            
         return model, tokenizer, label_encoder, maxlen
     except Exception as e:
         st.error(f"Error loading model files: {str(e)}")
         return None, None, None, None
 
 def simple_tokenize(text):
-    """Simple tokenization function that splits on whitespace and punctuation"""
-    # Remove URLs
+    """Basic tokenization (remove URLs, split words)"""
     text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
-    
-    # Split on punctuation and whitespace
     tokens = re.findall(r'\w+', text.lower())
     return tokens
 
 def preprocessing_text(text):
     """Clean and preprocess input text"""
     try:
-        # Convert to lowercase
         text = text.lower()
-        
-        # Tokenize using simple tokenization
         words = simple_tokenize(text)
-        
-        # Remove stopwords but keep negation words
-        words = [word for word in words if word not in stop_words 
-                or word in ['not', 'no', "n't"]]
-        
-        # Lemmatize
+        words = [word for word in words if word not in stop_words or word in ['not', 'no', "n't"]]
         words = [lemmatizer.lemmatize(word) for word in words]
-        
         return ' '.join(words)
     except Exception as e:
         st.error(f"Error in text preprocessing: {str(e)}")
@@ -106,54 +84,46 @@ st.title('Klasifikasi Jenis Pertanyaan Menggunakan Machine Learning')
 # Input text
 text = st.text_input("Masukkan Pertanyaan:", key="input1")
 
-# Process input when available
+# Tabs for different outputs
+tab1, tab2, tab3 = st.tabs(["Prediksi", "Probabilitas Kelas", "Grafik Model"])
+
 if text.strip():
     try:
         # Preprocess text
         text_prepared = preprocessing_text(text)
-        
-        if text_prepared:
-            # Convert to sequence and pad
+
+        if text_prepared and tokenizer and model_prediksi and label_encoder:
             sequence_testing = tokenizer.texts_to_sequences([text_prepared])
             padded_testing = pad_sequences(sequence_testing, maxlen=maxlen, padding='post')
-            
-            # Make prediction
+
             with st.spinner('Melakukan prediksi...'):
                 prediksi = model_prediksi.predict(padded_testing, verbose=0)
                 predicted_class = np.argmax(prediksi, axis=1)[0]
                 predicted_label = label_encoder.inverse_transform([predicted_class])[0]
-                
-                # Show results
-                st.success("Hasil Prediksi (Class): " + predicted_label)
-        
+
+            # Display prediction in tab1
+            with tab1:
+                st.success(f"Hasil Prediksi (Class): {predicted_label}")
+
+            # Display class probabilities in tab2
+            with tab2:
+                st.subheader("Probabilitas Kelas:")
+                classes = label_encoder.classes_
+                predictions_with_classes = {cls: f"{prob * 100:.2f}%" for cls, prob in zip(classes, prediksi[0])}
+
+                for cls, prob in predictions_with_classes.items():
+                    st.write(f"{cls}: {prob}")
+
+            # Display image in tab3
+            with tab3:
+                st.subheader("Grafik Model")
+                image = Image.open("Grafik.png")
+                st.image(image, caption="Grafik Model", use_column_width=True)
+        else:
+            st.error("Model atau tokenizer belum berhasil dimuat. Periksa file model.")
+
     except Exception as e:
         st.error(f"Error during prediction: {str(e)}")
         st.info("Pastikan semua file model dan resources sudah tersedia.")
-        
-    except Exception as e:
-        st.error(f"Error during prediction: {str(e)}")
-        st.info("Pastikan semua file model dan resources sudah tersedia.")
-
-with tab2:
-    if text.strip():  
-        # Daftar kelas
-        classes = label_encoder.classes_
-
-        # Konversi ke persentase
-        predictions_with_classes = {cls: f"{prob * 100:.2f}%" for cls, prob in zip(classes, prediksi[0])}
-
-        # Tampilkan hasil
-        for cls, prob in predictions_with_classes.items():
-            st.write(f"{cls}: {prob}")
-    else:
-        st.write("Masukkan Pertanyaan Terlebih Dahulu!")
-
-with tab3:
-    from PIL import Image
-
-    # Load the image
-    image = Image.open(r"Grafik.png")
 
 
-    # Display the image
-    st.image(image, caption="Grafik Model", use_column_width=True)
