@@ -13,6 +13,19 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from pathlib import Path
 
+
+import os
+import nltk
+nltk.data.path.append('./nltk_data')
+
+# Verify data existence or download if missing
+try:
+    nltk.data.find('tokenizers/punkt')
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('punkt', download_dir='./nltk_data')
+    nltk.download('wordnet', download_dir='./nltk_data')
+
 # Pastikan resource NLTK tersedia
 nltk_data_dir = Path("./nltk_data")
 nltk_data_dir.mkdir(exist_ok=True)
