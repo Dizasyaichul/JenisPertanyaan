@@ -83,7 +83,9 @@ model_prediksi, tokenizer, label_encoder, maxlen = load_model_files()
 
 # Load dataset and extract 50 questions per category
 file_path = "dataset.txt"
-categories = defaultdict(list)
+selected_classes = {"loc", "num", "hum", "desc", "abbr", "enty"}
+all_questions = []
+
 try:
     with open(file_path, "r", encoding="utf-8") as file:
         lines = file.readlines()
@@ -91,14 +93,19 @@ try:
             parts = line.strip().split(" ", 1)
             if len(parts) > 1:
                 category, question = parts
-                categories[category].append(question)
-    sampled_questions = {cat: random.sample(qs, min(50, len(qs))) for cat, qs in categories.items()}
-    tab4_content = ""
-    for category, questions in sampled_questions.items():
-        tab4_content += f"### {category}\n"
-        for q in questions:
-            tab4_content += f"- {q}\n"
-        tab4_content += "\n"
+                if category in selected_classes:
+                    all_questions.append(question)
+
+    # Shuffle questions randomly
+    random.shuffle(all_questions)
+    sampled_questions = all_questions[:50]  # Display 50 random questions
+
+    # Prepare content for tab4
+    tab4_content = "### Contoh-Contoh Pertanyaan dari Dataset\n\n"
+    for q in sampled_questions:
+        tab4_content += f"- {q}\n"
+    tab4_content += "\n"
+
 except Exception as e:
     tab4_content = f"Error loading dataset: {str(e)}"
 
