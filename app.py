@@ -83,9 +83,7 @@ model_prediksi, tokenizer, label_encoder, maxlen = load_model_files()
 
 # Load dataset and extract 50 questions per category
 file_path = "dataset.txt"
-selected_classes = {"loc", "num", "hum", "desc", "abbr", "enty"}
-all_questions = []
-
+categories = defaultdict(list)
 try:
     with open(file_path, "r", encoding="utf-8") as file:
         lines = file.readlines()
@@ -108,7 +106,6 @@ try:
 
 except Exception as e:
     tab4_content = f"Error loading dataset: {str(e)}"
-
 # Streamlit UI
 st.title('Klasifikasi Jenis Pertanyaan Menggunakan Machine Learning')
 
@@ -166,3 +163,4 @@ else:
 with tab4:
     st.subheader("Contoh-Contoh Pertanyaan dari Dataset")
     st.markdown(tab4_content)
+
