@@ -133,3 +133,27 @@ if text.strip():
     except Exception as e:
         st.error(f"Error during prediction: {str(e)}")
         st.info("Pastikan semua file model dan resources sudah tersedia.")
+
+with tab2:
+    if text.strip():  
+        # Daftar kelas
+        classes = label_encoder.classes_
+
+        # Konversi ke persentase
+        predictions_with_classes = {cls: f"{prob * 100:.2f}%" for cls, prob in zip(classes, prediksi[0])}
+
+        # Tampilkan hasil
+        for cls, prob in predictions_with_classes.items():
+            st.write(f"{cls}: {prob}")
+    else:
+        st.write("Masukkan Pertanyaan Terlebih Dahulu!")
+
+with tab3:
+    from PIL import Image
+
+    # Load the image
+    image = Image.open(r"Grafik.png")
+
+
+    # Display the image
+    st.image(image, caption="Grafik Model", use_column_width=True)
