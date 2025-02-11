@@ -137,6 +137,17 @@ with tab3:
     except Exception as e:
         st.error(f"Error loading image: {str(e)}")
 
+# Label Descriptions
+label_descriptions = {
+    'DESC': 'Class DESC untuk mendeskripsikan sesuatu.',
+    'ENTY': 'Class ENTY untuk mengenali entitas atau kategori tertentu.',
+    'ABBR': 'Class ABBR untuk mendeteksi singkatan atau akronim.',
+    'HUM': 'Class HUM untuk mengenali pertanyaan yang berhubungan dengan manusia.',
+    'NUM': 'Class NUM untuk mengenali pertanyaan yang membutuhkan jawaban berupa angka.',
+    'LOC': 'Class LOC untuk menentukan suatu lokasi.'
+}
+
+
 # Jika pengguna belum memasukkan teks
 if not text.strip():
     with tab2:
@@ -158,7 +169,7 @@ else:
             # Display prediction in tab1
             with tab1:
                 st.success(f"Hasil Prediksi (Class): {predicted_label}")
-
+                st.write(f"Deskripsi Class: {label_descriptions.get(predicted_label, 'Tidak ada deskripsi tersedia.')}")
             # Display class probabilities in tab2
             with tab2:
                 st.subheader("Probabilitas Kelas:")
