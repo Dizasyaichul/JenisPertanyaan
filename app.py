@@ -158,4 +158,8 @@ else:
 # Display sample questions in Tab 4
 with tab4:
     st.subheader("Contoh-Contoh Pertanyaan dari Dataset")
-    st.markdown(tab4_content)
+
+    if not tab4_content.strip():
+        st.warning("Tidak ada data pertanyaan yang tersedia. Pastikan file dataset.txt ada dan memiliki isi.")
+    else:
+        st.markdown(tab4_content)
