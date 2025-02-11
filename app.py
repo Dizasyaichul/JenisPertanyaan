@@ -13,7 +13,6 @@ from nltk.stem import WordNetLemmatizer
 from pathlib import Path
 import os
 from PIL import Image
-from collections import defaultdict
 import random
 
 # Initialize NLTK data directory
@@ -93,13 +92,13 @@ try:
                 category, question = parts
                 if category in categories:
                     categories[category].append(question)
-    sampled_questions = {cat: random.sample(qs, min(50, len(qs))) for cat, qs in categories.items()}
-    tab4_content = ""
-    for category, questions in sampled_questions.items():
-        tab4_content += f"### {category}\n"
-        for q in questions:
-            tab4_content += f"- {q}\n"
-        tab4_content += "\n"
+
+    sampled_questions = []
+    for cat, qs in categories.items():
+        sampled_questions.extend(random.sample(qs, min(50, len(qs))))
+
+    tab4_content = "\n".join([f"- {q}" for q in sampled_questions])
+
 except Exception as e:
     tab4_content = f"Error loading dataset: {str(e)}"
 
