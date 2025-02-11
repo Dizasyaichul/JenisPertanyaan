@@ -5,7 +5,7 @@ import tensorflow as tf
 import re
 import pickle
 import nltk
-
+from sklearn.preprocessing import LabelEncoder
 from tensorflow import keras
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from nltk.corpus import stopwords
@@ -33,8 +33,11 @@ ensure_nltk_resources()
 model_prediksi = keras.models.load_model('sentimen_model.h5')
 with open('tokenizer.pkl', 'rb') as handle:
     tokenizer = pickle.load(handle)
-with open('label_encoder.pkl', 'rb') as handle:
-    label_encoder = pickle.load(handle)
+try:
+    with open('label_encoder.pkl', 'rb') as handle:
+        label_encoder = pickle.load(handle)
+except Exception as e:
+    print(f"Error loading label_encoder: {str(e)}")
 with open('maxlen.pkl', 'rb') as handle:
     maxlen = pickle.load(handle)
 
