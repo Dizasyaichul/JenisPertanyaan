@@ -160,4 +160,3 @@ else:
 with tab4:
     st.subheader("Contoh-Contoh Pertanyaan dari Dataset")
     st.markdown(tab4_content)
-)
