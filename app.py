@@ -85,7 +85,7 @@ st.title('Klasifikasi Jenis Pertanyaan Menggunakan Machine Learning')
 text = st.text_input("Masukkan Pertanyaan:", key="input1")
 
 # Tabs for different outputs
-tab1, tab2, tab3 = st.tabs(["Prediksi", "Probabilitas Kelas", "Grafik Model"])
+tab1, tab2, tab3, tab4 = st.tabs(['Prediksi', 'Probabilitas Kelas', 'Grafik Model', 'Contoh-Contoh Pertanyaan'])
 
 # Langsung tampilkan grafik di tab3
 with tab3:
@@ -130,3 +130,8 @@ else:
     except Exception as e:
         st.error(f"Error during prediction: {str(e)}")
         st.info("Pastikan semua file model dan resources sudah tersedia.")
+
+# Display sample questions in Tab 4
+with tab4:
+    st.subheader("Contoh-Contoh Pertanyaan dari Dataset")
+    st.markdown(tab4_content)
