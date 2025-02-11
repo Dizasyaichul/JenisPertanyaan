@@ -87,7 +87,20 @@ text = st.text_input("Masukkan Pertanyaan:", key="input1")
 # Tabs for different outputs
 tab1, tab2, tab3 = st.tabs(["Prediksi", "Probabilitas Kelas", "Grafik Model"])
 
-if text.strip():
+# Langsung tampilkan grafik di tab3
+with tab3:
+    st.subheader("Grafik Model")
+    try:
+        image = Image.open("Grafik.png")
+        st.image(image, caption="Grafik Model", use_column_width=True)
+    except Exception as e:
+        st.error(f"Error loading image: {str(e)}")
+
+# Jika pengguna belum memasukkan teks
+if not text.strip():
+    with tab2:
+        st.write("Masukkan Pertanyaan Terlebih Dahulu!")
+else:
     try:
         # Preprocess text
         text_prepared = preprocessing_text(text)
@@ -114,16 +127,7 @@ if text.strip():
                 for cls, prob in predictions_with_classes.items():
                     st.write(f"{cls}: {prob}")
 
-            # Display image in tab3
-            with tab3:
-                st.subheader("Grafik Model")
-                image = Image.open("Grafik.png")
-                st.image(image, caption="Grafik Model", use_column_width=True)
-        else:
-            st.error("Model atau tokenizer belum berhasil dimuat. Periksa file model.")
-
     except Exception as e:
         st.error(f"Error during prediction: {str(e)}")
         st.info("Pastikan semua file model dan resources sudah tersedia.")
-
 
