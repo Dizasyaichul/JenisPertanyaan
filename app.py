@@ -13,11 +13,14 @@ from nltk.stem import WordNetLemmatizer
 from pathlib import Path
 import os
 from PIL import Image
+from collections import defaultdict
+import random
 
 # Initialize NLTK data directory
 nltk_data_dir = Path("./nltk_data")
 nltk_data_dir.mkdir(exist_ok=True)
 nltk.data.path.insert(0, str(nltk_data_dir))
+nltk.data.path.append(str(nltk_data_dir))
 
 @st.cache_resource
 def initialize_nltk():
@@ -78,6 +81,27 @@ def preprocessing_text(text):
 # Load model and related files
 model_prediksi, tokenizer, label_encoder, maxlen = load_model_files()
 
+# Load dataset and extract 50 questions per category
+file_path = "dataset.txt"
+categories = defaultdict(list)
+try:
+    with open(file_path, "r", encoding="utf-8") as file:
+        lines = file.readlines()
+        for line in lines:
+            parts = line.strip().split(" ", 1)
+            if len(parts) > 1:
+                category, question = parts
+                categories[category].append(question)
+    sampled_questions = {cat: random.sample(qs, min(50, len(qs))) for cat, qs in categories.items()}
+    tab4_content = ""
+    for category, questions in sampled_questions.items():
+        tab4_content += f"### {category}\n"
+        for q in questions:
+            tab4_content += f"- {q}\n"
+        tab4_content += "\n"
+except Exception as e:
+    tab4_content = f"Error loading dataset: {str(e)}"
+
 # Streamlit UI
 st.title('Klasifikasi Jenis Pertanyaan Menggunakan Machine Learning')
 
@@ -135,3 +159,4 @@ else:
 with tab4:
     st.subheader("Contoh-Contoh Pertanyaan dari Dataset")
     st.markdown(tab4_content)
+
