@@ -13,6 +13,7 @@ from nltk.stem import WordNetLemmatizer
 from pathlib import Path
 import os
 from PIL import Image
+import random
 
 # Initialize NLTK data directory
 nltk_data_dir = Path("./nltk_data")
@@ -87,7 +88,47 @@ text = st.text_input("Masukkan Pertanyaan:", key="input1")
 # Tabs for different outputs
 tab1, tab2, tab3, tab4 = st.tabs(["Prediksi", "Probabilitas Kelas", "Grafik Model", "Contoh-Contoh Pertanyaan"])
 
-# Langsung tampilkan grafik di tab3
+# Load dataset and process questions
+file_path = "dataset.txt"
+
+@st.cache_resource
+def get_random_questions(file_path):
+    """Load dataset, filter by class, select 50 questions per class, and shuffle"""
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            lines = file.readlines()
+        
+        question_classes = {"NUM": [], "HUM": [], "ENTY": [], "ABBR": [], "DESC": [], "LOC": []}
+
+        for line in lines:
+            match = line.split(" ", 1)
+            if len(match) > 1:
+                label, question = match[0], match[1].strip()
+                main_label = label.split(":")[0]
+                if main_label in question_classes:
+                    question_classes[main_label].append(question)
+
+        selected_questions = []
+        for category in question_classes:
+            selected_questions.extend(random.sample(question_classes[category], min(50, len(question_classes[category]))))
+
+        random.shuffle(selected_questions)
+        return selected_questions
+    except Exception as e:
+        st.error(f"Error loading questions: {str(e)}")
+        return []
+
+# Load random questions
+random_questions = get_random_questions(file_path)
+
+# Display question examples in Tab 4
+with tab4:
+    st.subheader("Contoh-Contoh Pertanyaan")
+
+    for idx, question in enumerate(random_questions, 1):
+        st.write(f"{idx}. {question}")
+
+# Display Model Graph
 with tab3:
     st.subheader("Grafik Model")
     try:
@@ -95,16 +136,6 @@ with tab3:
         st.image(image, caption="Grafik Model", use_container_width=True)
     except Exception as e:
         st.error(f"Error loading image: {str(e)}")
-
-# Label Descriptions
-label_descriptions = {
-    'DESC': 'Class DESC untuk mendeskripsikan sesuatu.',
-    'ENTY': 'Class ENTY untuk mengenali entitas atau kategori tertentu.',
-    'ABBR': 'Class ABBR untuk mendeteksi singkatan atau akronim.',
-    'HUM': 'Class HUM untuk mengenali pertanyaan yang berhubungan dengan manusia.',
-    'NUM': 'Class NUM untuk mengenali pertanyaan yang membutuhkan jawaban berupa angka.',
-    'LOC': 'Class LOC untuk menentukan suatu lokasi.'
-}
 
 # Jika pengguna belum memasukkan teks
 if not text.strip():
@@ -127,7 +158,6 @@ else:
             # Display prediction in tab1
             with tab1:
                 st.success(f"Hasil Prediksi (Class): {predicted_label}")
-                st.write(f"Deskripsi Class: {label_descriptions.get(predicted_label, 'Tidak ada deskripsi tersedia.')}")
 
             # Display class probabilities in tab2
             with tab2:
@@ -137,21 +167,7 @@ else:
 
                 for cls, prob in predictions_with_classes.items():
                     st.write(f"{cls}: {prob}")
+
     except Exception as e:
         st.error(f"Error during prediction: {str(e)}")
         st.info("Pastikan semua file model dan resources sudah tersedia.")
-
-# Load dataset dan tampilkan contoh pertanyaan secara acak di tab4
-file_path = "dataset.txt"
-try:
-    with open(file_path, 'r', encoding='utf-8') as file:
-        lines = file.readlines()
-        np.random.shuffle(lines)  # Acak urutan pertanyaan
-        random_questions = lines[:50]  # Ambil 50 pertanyaan
-
-    with tab4:
-        st.subheader("Contoh-Contoh Pertanyaan")
-        for question in random_questions:
-            st.write(question.strip())
-except Exception as e:
-    st.error(f"Error loading dataset: {str(e)}")
