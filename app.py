@@ -83,6 +83,7 @@ st.title('Klasifikasi Jenis Pertanyaan Menggunakan Machine Learning')
 
 # Input text
 text = st.text_input("Masukkan Pertanyaan:", key="input1")
+submit = st.button("Enter")  # Tombol untuk memproses input
 
 # Tabs for different outputs
 tab1, tab2, tab3 = st.tabs(["Prediksi", "Probabilitas Kelas", "Grafik Model"])
@@ -92,7 +93,7 @@ with tab3:
     st.subheader("Grafik Model")
     try:
         image = Image.open("Grafik.png")
-        st.image(image, caption="Grafik Model", use_container_width=True)
+        st.image(image, caption="Grafik Model", use_column_width=True)
     except Exception as e:
         st.error(f"Error loading image: {str(e)}")
 
@@ -100,7 +101,9 @@ with tab3:
 if not text.strip():
     with tab2:
         st.write("Masukkan Pertanyaan Terlebih Dahulu!")
-else:
+
+# Hanya proses jika tombol "Enter" ditekan
+if submit and text.strip():
     try:
         # Preprocess text
         text_prepared = preprocessing_text(text)
@@ -130,4 +133,3 @@ else:
     except Exception as e:
         st.error(f"Error during prediction: {str(e)}")
         st.info("Pastikan semua file model dan resources sudah tersedia.")
-
