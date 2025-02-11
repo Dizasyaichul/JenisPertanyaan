@@ -13,14 +13,12 @@ from nltk.stem import WordNetLemmatizer
 from pathlib import Path
 import os
 from PIL import Image
-from collections import defaultdict
 import random
 
 # Initialize NLTK data directory
 nltk_data_dir = Path("./nltk_data")
 nltk_data_dir.mkdir(exist_ok=True)
 nltk.data.path.insert(0, str(nltk_data_dir))
-nltk.data.path.append(str(nltk_data_dir))
 
 @st.cache_resource
 def initialize_nltk():
@@ -81,33 +79,6 @@ def preprocessing_text(text):
 # Load model and related files
 model_prediksi, tokenizer, label_encoder, maxlen = load_model_files()
 
-# Load dataset and extract 50 questions per category
-file_path = "dataset.txt"
-selected_classes = {"loc", "num", "hum", "desc", "abbr", "enty"}
-categories = defaultdict(list)
-all_questions = []
-try:
-    with open(file_path, "r", encoding="utf-8") as file:
-        lines = file.readlines()
-        for line in lines:
-            parts = line.strip().split(" ", 1)
-            if len(parts) > 1:
-                category, question = parts
-                if category in selected_classes:
-                    all_questions.append(question)
-
-    # Shuffle questions randomly
-    random.shuffle(all_questions)
-    sampled_questions = all_questions[:50]  # Display 50 random questions
-
-    # Prepare content for tab4
-    tab4_content = "### Contoh-Contoh Pertanyaan dari Dataset\n\n"
-    for q in sampled_questions:
-        tab4_content += f"- {q}\n"
-    tab4_content += "\n"
-
-except Exception as e:
-    tab4_content = f"Error loading dataset: {str(e)}"
 # Streamlit UI
 st.title('Klasifikasi Jenis Pertanyaan Menggunakan Machine Learning')
 
@@ -115,9 +86,49 @@ st.title('Klasifikasi Jenis Pertanyaan Menggunakan Machine Learning')
 text = st.text_input("Masukkan Pertanyaan:", key="input1")
 
 # Tabs for different outputs
-tab1, tab2, tab3, tab4 = st.tabs(['Prediksi', 'Probabilitas Kelas', 'Grafik Model', 'Contoh-Contoh Pertanyaan'])
+tab1, tab2, tab3, tab4 = st.tabs(["Prediksi", "Probabilitas Kelas", "Grafik Model", "Contoh-Contoh Pertanyaan"])
 
-# Langsung tampilkan grafik di tab3
+# Load dataset and process questions
+file_path = "dataset.txt"
+
+@st.cache_resource
+def get_random_questions(file_path):
+    """Load dataset, filter by class, select 50 questions per class, and shuffle"""
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            lines = file.readlines()
+        
+        question_classes = {"NUM": [], "HUM": [], "ENTY": [], "ABBR": [], "DESC": [], "LOC": []}
+
+        for line in lines:
+            match = line.split(" ", 1)
+            if len(match) > 1:
+                label, question = match[0], match[1].strip()
+                main_label = label.split(":")[0]
+                if main_label in question_classes:
+                    question_classes[main_label].append(question)
+
+        selected_questions = []
+        for category in question_classes:
+            selected_questions.extend(random.sample(question_classes[category], min(50, len(question_classes[category]))))
+
+        random.shuffle(selected_questions)
+        return selected_questions
+    except Exception as e:
+        st.error(f"Error loading questions: {str(e)}")
+        return []
+
+# Load random questions
+random_questions = get_random_questions(file_path)
+
+# Display question examples in Tab 4
+with tab4:
+    st.subheader("Contoh-Contoh Pertanyaan")
+
+    for idx, question in enumerate(random_questions, 1):
+        st.write(f"{idx}. {question}")
+
+# Display Model Graph
 with tab3:
     st.subheader("Grafik Model")
     try:
@@ -160,9 +171,3 @@ else:
     except Exception as e:
         st.error(f"Error during prediction: {str(e)}")
         st.info("Pastikan semua file model dan resources sudah tersedia.")
-
-# Display sample questions in Tab 4
-with tab4:
-    st.subheader("Contoh-Contoh Pertanyaan dari Dataset")
-    st.markdown(tab4_content)
-
