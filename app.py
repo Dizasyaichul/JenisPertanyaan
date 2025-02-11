@@ -13,7 +13,6 @@ from nltk.stem import WordNetLemmatizer
 from pathlib import Path
 import os
 
-
 # Initialize NLTK data directory
 nltk_data_dir = Path("./nltk_data")
 nltk_data_dir.mkdir(exist_ok=True)
@@ -104,70 +103,32 @@ model_prediksi, tokenizer, label_encoder, maxlen = load_model_files()
 # Streamlit UI
 st.title('Klasifikasi Jenis Pertanyaan Menggunakan Machine Learning')
 
-tab1, tab2, tab3 = st.tabs(['Masukkan Pertanyaan', 'Presentase Prediksi Teks','Grafik Model'])
-
-
-with tab1:
 # Input text
-    text = st.text_input("Masukkan Pertanyaan:", key="input1")
+text = st.text_input("Masukkan Pertanyaan:", key="input1")
 
-    # Process input when available
-    if text.strip():
-        try:
-            # Preprocess text
-            text_prepared = preprocessing_text(text)
+# Process input when available
+if text.strip():
+    try:
+        # Preprocess text
+        text_prepared = preprocessing_text(text)
+        
+        if text_prepared:
+            # Convert to sequence and pad
+            sequence_testing = tokenizer.texts_to_sequences([text_prepared])
+            padded_testing = pad_sequences(sequence_testing, maxlen=maxlen, padding='post')
             
-            if text_prepared:
-                # Convert to sequence and pad
-                sequence_testing = tokenizer.texts_to_sequences([text_prepared])
-                padded_testing = pad_sequences(sequence_testing, maxlen=maxlen, padding='post')
+            # Make prediction
+            with st.spinner('Melakukan prediksi...'):
+                prediksi = model_prediksi.predict(padded_testing, verbose=0)
+                predicted_class = np.argmax(prediksi, axis=1)[0]
+                predicted_label = label_encoder.inverse_transform([predicted_class])[0]
                 
-                # Make prediction
-                with st.spinner('Melakukan prediksi...'):
-                    prediksi = model_prediksi.predict(padded_testing, verbose=0)
-                    predicted_class = np.argmax(prediksi, axis=1)[0]
-                    predicted_label = label_encoder.inverse_transform([predicted_class])[0]
-                    
-                    # Show results
-                    st.success("Hasil Prediksi (Class): " + predicted_label)
-                    # Label Descriptions
-                    label_descriptions = {
-                        'DESC': 'Class DESC untuk mendeskripsikan sesuatu.',
-                        'ENTY': 'Class ENTY untuk mengenali entitas atau kategori tertentu.',
-                        'ABBR': 'Class ABBR untuk mendeteksi singkatan atau akronim.',
-                        'HUM': 'Class HUM untuk mengenali pertanyaan yang berhubungan dengan manusia.',
-                        'NUM': 'Class NUM untuk mengenali pertanyaan yang membutuhkan jawaban berupa angka.',
-                        'LOC': 'Class LOC untuk menentukan suatu lokasi.'
-                    }
-                    st.write(f"Deskripsi Class: {label_descriptions.get(predicted_label, 'Tidak ada deskripsi tersedia.')}")
-            
-        except Exception as e:
-            st.error(f"Error during prediction: {str(e)}")
-            st.info("Pastikan semua file model dan resources sudah tersedia.")
-
-with tab2:
-    if text.strip():  
-        # Daftar kelas
-        classes = label_encoder.classes_
-
-        # Konversi ke persentase
-        predictions_with_classes = {cls: f"{prob * 100:.2f}%" for cls, prob in zip(classes, prediksi[0])}
-
-        # Tampilkan hasil
-        for cls, prob in predictions_with_classes.items():
-            st.write(f"{cls}: {prob}")
-    else:
-        st.write("Masukkan Pertanyaan Terlebih Dahulu!")
-
-with tab3:
-    from PIL import Image
-
-    # Load the image
-    image = Image.open(r"Grafik.png")
-
-
-    # Display the image
-    st.image(image, caption="Grafik Model", use_column_width=True)
+                # Show results
+                st.success("Hasil Prediksi (Class): " + predicted_label)
+        
+    except Exception as e:
+        st.error(f"Error during prediction: {str(e)}")
+        st.info("Pastikan semua file model dan resources sudah tersedia.")
         
     except Exception as e:
         st.error(f"Error during prediction: {str(e)}")
