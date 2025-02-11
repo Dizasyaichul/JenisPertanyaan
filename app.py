@@ -85,6 +85,7 @@ model_prediksi, tokenizer, label_encoder, maxlen = load_model_files()
 file_path = "dataset.txt"
 selected_classes = {"loc", "num", "hum", "desc", "abbr", "enty"}
 categories = defaultdict(list)
+all_questions = []
 try:
     with open(file_path, "r", encoding="utf-8") as file:
         lines = file.readlines()
