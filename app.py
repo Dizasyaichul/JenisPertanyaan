@@ -92,7 +92,7 @@ with tab3:
     st.subheader("Grafik Model")
     try:
         image = Image.open("Grafik.png")
-        st.image(image, caption="Grafik Model", use_column_width=True)
+        st.image(image, caption="Grafik Model", use_container_width=True)
     except Exception as e:
         st.error(f"Error loading image: {str(e)}")
 
