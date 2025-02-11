@@ -83,7 +83,7 @@ model_prediksi, tokenizer, label_encoder, maxlen = load_model_files()
 
 # Load dataset and extract 50 questions per category
 file_path = "dataset.txt"
-categories = {"DESC": [], "HUM": [], "NUM": [], "LOC": [], "ENTY": [], "ABBR": []}
+categories = defaultdict(list)
 try:
     with open(file_path, "r", encoding="utf-8") as file:
         lines = file.readlines()
@@ -91,8 +91,7 @@ try:
             parts = line.strip().split(" ", 1)
             if len(parts) > 1:
                 category, question = parts
-                if category in categories:
-                    categories[category].append(question)
+                categories[category].append(question)
     sampled_questions = {cat: random.sample(qs, min(50, len(qs))) for cat, qs in categories.items()}
     tab4_content = ""
     for category, questions in sampled_questions.items():
