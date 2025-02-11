@@ -81,9 +81,14 @@ model_prediksi, tokenizer, label_encoder, maxlen = load_model_files()
 # Streamlit UI
 st.title('Klasifikasi Jenis Pertanyaan Menggunakan Machine Learning')
 
-# Input text
-text = st.text_input("Masukkan Pertanyaan:", key="input1")
-submit = st.button("Enter")  # Tombol untuk memproses input
+# Layout for input box and button in one row
+col1, col2 = st.columns([4, 1])  # Kolom untuk input (4 bagian) dan tombol (1 bagian)
+
+with col1:
+    text = st.text_input("Masukkan Pertanyaan:", key="input1")
+
+with col2:
+    submit = st.button("Enter")  # Tombol berada di sebelah kanan kolom input
 
 # Tabs for different outputs
 tab1, tab2, tab3 = st.tabs(["Prediksi", "Probabilitas Kelas", "Grafik Model"])
@@ -133,3 +138,4 @@ if submit and text.strip():
     except Exception as e:
         st.error(f"Error during prediction: {str(e)}")
         st.info("Pastikan semua file model dan resources sudah tersedia.")
+
